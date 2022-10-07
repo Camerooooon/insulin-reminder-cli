@@ -1,5 +1,7 @@
 use structopt::StructOpt;
 
+mod insulin;
+
 #[derive(StructOpt)]
 enum InsulinCommand {
     #[structopt(name = "put", alias = "p")]
@@ -24,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .header("x-api-key", key)
                 .send()
                 .await?
-                .json::<serde_json::Value>()
+                .json::<insulin::DoseResponse>()
                 .await?;
             println!("{:#?}", resp);
             Ok(())
