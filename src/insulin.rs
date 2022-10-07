@@ -6,9 +6,9 @@ pub struct Dose {
 
 #[derive(serde::Deserialize, Debug)]
 pub struct DoseResponse {
-    dose: Option<Dose>,
-    timestamp: Option<String>,
-    success: bool,
-    insulin_time: bool,
-    time_until: Option<i64>,
+    pub dose: Option<Dose>,
+    pub timestamp: Option<String>,
+    pub success: bool,
+    pub insulin_time: bool,
+    pub time_until: Option<i64>,
 }

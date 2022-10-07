@@ -28,7 +28,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .await?
                 .json::<insulin::DoseResponse>()
                 .await?;
-            println!("{:#?}", resp);
+            match resp.time_until {
+                Some(t) => println!("{}hrs", t / 60 / 60),
+                None => println!("None"),
+            }
             Ok(())
         }
     }
