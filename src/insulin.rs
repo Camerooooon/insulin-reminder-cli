@@ -12,3 +12,8 @@ pub struct DoseResponse {
     pub insulin_time: bool,
     pub time_until: Option<i64>,
 }
+
+#[derive(serde::Deserialize, serde::Serialize, Debug)]
+pub struct DoseRequest {
+    pub dose: u8,
+}
