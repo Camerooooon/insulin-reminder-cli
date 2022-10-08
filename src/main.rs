@@ -13,7 +13,7 @@ enum InsulinCommand {
         key: String,
 
         #[structopt(name = "ip", alias = "i")]
-        ip: Ipv4Addr,
+        ip: String,
 
         #[structopt(name = "port", short = "p", default_value = "443")]
         port: i16,
@@ -25,7 +25,7 @@ enum InsulinCommand {
         key: String,
 
         #[structopt(name = "ip", alias = "i")]
-        ip: Ipv4Addr,
+        ip: String,
 
         #[structopt(name = "port", short = "p", default_value = "443")]
         port: i16,
@@ -48,7 +48,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     match args {
         InsulinCommand::Put { key, ip, port } => {
             let resp = client
-                .post(format!("http://{}:{}/dose", ip, port))
+                .post(format!("https://{}:{}/dose", ip, port))
                 .header("x-api-key", key)
                 .json(&DoseRequest { dose: 16 })
                 .send()
@@ -60,7 +60,7 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
         InsulinCommand::Get { key, ip, port } => {
             let resp = client
-                .get(format!("http://{}:{}/lastdose", ip, port))
+                .get(format!("https://{}:{}/lastdose", ip, port))
                 .header("x-api-key", key)
                 .send()
                 .await?
