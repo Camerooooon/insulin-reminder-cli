@@ -1,3 +1,5 @@
+use std::net::Ipv4Addr;
+
 use insulin::DoseRequest;
 use structopt::StructOpt;
 
@@ -9,23 +11,44 @@ enum InsulinCommand {
     Put {
         #[structopt(name = "key", alias = "k")]
         key: String,
+
+        #[structopt(name = "ip", alias = "i")]
+        ip: Ipv4Addr,
+
+        #[structopt(name = "port", short = "p", default_value = "443")]
+        port: i16,
     },
 
     #[structopt(name = "get", alias = "g")]
     Get {
         #[structopt(name = "key", alias = "k")]
         key: String,
+
+        #[structopt(name = "ip", alias = "i")]
+        ip: Ipv4Addr,
+
+        #[structopt(name = "port", short = "p", default_value = "443")]
+        port: i16,
     },
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() {
+    match run().await {
+        Ok(()) => {}
+        Err(_) => {
+            println!("error")
+        }
+    }
+}
+
+async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = InsulinCommand::from_args();
     let client = reqwest::Client::new();
     match args {
-        InsulinCommand::Put { key } => {
+        InsulinCommand::Put { key, ip, port } => {
             let resp = client
-                .post("http://localhost:8000/dose")
+                .post(format!("http://{}:{}/dose", ip, port))
                 .header("x-api-key", key)
                 .json(&DoseRequest { dose: 16 })
                 .send()
@@ -35,9 +58,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}", resp);
             Ok(())
         }
-        InsulinCommand::Get { key } => {
+        InsulinCommand::Get { key, ip, port } => {
             let resp = client
-                .get("http://localhost:8000/lastdose")
+                .get(format!("http://{}:{}/lastdose", ip, port))
                 .header("x-api-key", key)
                 .send()
                 .await?
