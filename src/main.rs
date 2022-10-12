@@ -1,8 +1,7 @@
-use std::net::Ipv4Addr;
-
 use insulin::DoseRequest;
 use structopt::StructOpt;
 
+mod daemon;
 mod insulin;
 
 #[derive(StructOpt)]
@@ -17,6 +16,9 @@ enum InsulinCommand {
 
         #[structopt(name = "port", short = "p", default_value = "443")]
         port: i16,
+
+        #[structopt(name = "https", alias = "secure", short = "s")]
+        secure: bool,
     },
 
     #[structopt(name = "get", alias = "g")]
@@ -29,6 +31,27 @@ enum InsulinCommand {
 
         #[structopt(name = "port", short = "p", default_value = "443")]
         port: i16,
+
+        #[structopt(name = "https", alias = "secure", short = "s")]
+        secure: bool,
+    },
+
+    #[structopt(name = "daemonize", alias = "daemon")]
+    Daemonize {
+        #[structopt(name = "key", alias = "k")]
+        key: String,
+
+        #[structopt(name = "ip", alias = "i")]
+        ip: String,
+
+        #[structopt(name = "port", short = "p", default_value = "443")]
+        port: i16,
+
+        #[structopt(name = "https", alias = "secure", short = "s")]
+        secure: bool,
+
+        #[structopt(name = "delay", short = "d", default_value = "6000")]
+        delay: u64,
     },
 }
 
@@ -46,9 +69,25 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let args = InsulinCommand::from_args();
     let client = reqwest::Client::new();
     match args {
-        InsulinCommand::Put { key, ip, port } => {
+        InsulinCommand::Put {
+            key,
+            ip,
+            port,
+            secure,
+        } => {
             let resp = client
-                .post(format!("https://{}:{}/dose", ip, port))
+                .post(format!(
+                    "http{}://{}:{}/dose",
+                    {
+                        if secure {
+                            "s"
+                        } else {
+                            ""
+                        }
+                    },
+                    ip,
+                    port
+                ))
                 .header("x-api-key", key)
                 .json(&DoseRequest { dose: 16 })
                 .send()
@@ -58,9 +97,25 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             println!("{}", resp);
             Ok(())
         }
-        InsulinCommand::Get { key, ip, port } => {
+        InsulinCommand::Get {
+            key,
+            ip,
+            port,
+            secure,
+        } => {
             let resp = client
-                .get(format!("https://{}:{}/lastdose", ip, port))
+                .get(format!(
+                    "http{}://{}:{}/lastdose",
+                    {
+                        if secure {
+                            "s"
+                        } else {
+                            ""
+                        }
+                    },
+                    ip,
+                    port
+                ))
                 .header("x-api-key", key)
                 .send()
                 .await?
@@ -72,5 +127,12 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             }
             Ok(())
         }
+        InsulinCommand::Daemonize {
+            key,
+            ip,
+            port,
+            secure,
+            delay,
+        } => daemon::init_daemon(key, ip, port, delay, secure).await,
     }
 }
